@@ -1,0 +1,12 @@
+{
+  "//": "Edge Functions run on Deno, not on Node. They are typechecked with `deno check`, not with the app's tsc — see package.json scripts.",
+  "imports": {
+    "@supabase/supabase-js": "jsr:@supabase/supabase-js@2"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window", "dom"]
+  },
+  "lint": { "rules": { "tags": ["recommended"] } },
+  "fmt": { "singleQuote": true, "lineWidth": 100 }
+}
