@@ -10,9 +10,11 @@ import { TeamLoadHeatmap } from '@/components/dashboards/TeamLoadHeatmap';
 import { MyQueue } from '@/components/dashboards/MyQueue';
 import { EditorQueue } from '@/components/dashboards/EditorQueue';
 import { SocialMediaStream } from '@/components/dashboards/SocialMediaStream';
+import { SalesPipelineStream } from '@/components/dashboards/SalesPipelineStream';
+import { HierarchyFlowDiagram } from '@/components/dashboards/HierarchyFlowDiagram';
 import { cn } from '@/lib/utils';
 
-type ViewTab = 'auto' | 'overview' | 'editor' | 'social' | 'management';
+type ViewTab = 'auto' | 'overview' | 'sales' | 'editor' | 'social' | 'hierarchy';
 
 export default function DashboardPage() {
   const { data: session, isLoading: sessionLoading, error: sessionError } = useSession();
@@ -54,6 +56,7 @@ export default function DashboardPage() {
       </div>
     );
   }
+
   const s = summary.data ?? {};
 
   const isLeadership = level <= 1;
@@ -62,6 +65,7 @@ export default function DashboardPage() {
 
   const isEditorRole = ['EDIT_LEAD', 'VIDEO_EDITOR', 'GRAPHIC_DESIGNER', 'MOTION_DESIGNER', 'DOP', 'CAMERA_ASSISTANT'].includes(roleCode);
   const isSocialRole = ['CONTENT_LEAD', 'SOCIAL_EXECUTIVE', 'SOCIAL_MANAGER'].includes(roleCode);
+  const isSalesRole = ['SALES_HEAD', 'SALES_EXECUTIVE', 'BUSINESS_DEVELOPMENT'].includes(roleCode);
 
   return (
     <div className="space-y-4 p-4">
@@ -79,7 +83,7 @@ export default function DashboardPage() {
 
         {/* View Switcher for Leadership / Management */}
         {(isLeadership || isManagement) && (
-          <div className="flex rounded-md border border-border bg-raised p-0.5 text-xs">
+          <div className="flex flex-wrap rounded-md border border-border bg-raised p-0.5 text-xs">
             <button
               onClick={() => setActiveTab('auto')}
               className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'auto' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
@@ -93,6 +97,12 @@ export default function DashboardPage() {
               Leadership
             </button>
             <button
+              onClick={() => setActiveTab('sales')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'sales' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
+            >
+              Sales Pipeline
+            </button>
+            <button
               onClick={() => setActiveTab('editor')}
               className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'editor' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
             >
@@ -103,6 +113,12 @@ export default function DashboardPage() {
               className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'social' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
             >
               Social Hub
+            </button>
+            <button
+              onClick={() => setActiveTab('hierarchy')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'hierarchy' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
+            >
+              Org Diagram
             </button>
           </div>
         )}
@@ -118,7 +134,7 @@ export default function DashboardPage() {
         <Stat label="Shoots next 7 days" value={Number(s.shoots_next_7 ?? 0)} />
       </div>
 
-      {isManagement && (activeTab === 'auto' || activeTab === 'management' || activeTab === 'overview') && (
+      {isManagement && (activeTab === 'auto' || activeTab === 'overview') && (
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Deliverables due this week" value={Number(s.deliverables_due_this_week ?? 0)} />
           <Stat label="Overdue tasks" value={Number(s.overdue_tasks ?? 0)}
@@ -149,6 +165,12 @@ export default function DashboardPage() {
       {/* Main Workspace Panels Grid */}
       <div className="grid gap-3 lg:grid-cols-2">
         {/* Render Workspace Based on Role Code or Selected Tab */}
+        {activeTab === 'hierarchy' && <HierarchyFlowDiagram />}
+
+        {(activeTab === 'sales' || (activeTab === 'auto' && isSalesRole)) && (
+          <SalesPipelineStream />
+        )}
+
         {(activeTab === 'editor' || (activeTab === 'auto' && isEditorRole)) && (
           <EditorQueue />
         )}
@@ -157,7 +179,7 @@ export default function DashboardPage() {
           <SocialMediaStream />
         )}
 
-        {(activeTab === 'auto' && isExecutor && !isEditorRole && !isSocialRole) && (
+        {(activeTab === 'auto' && isExecutor && !isEditorRole && !isSocialRole && !isSalesRole) && (
           <MyQueue />
         )}
 
@@ -172,7 +194,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {(activeTab === 'auto' && isManagement && !isLeadership && !isEditorRole && !isSocialRole) && (
+        {(activeTab === 'auto' && isManagement && !isLeadership && !isEditorRole && !isSocialRole && !isSalesRole) && (
           <>
             <MyQueue />
             <ClientHealthGrid />

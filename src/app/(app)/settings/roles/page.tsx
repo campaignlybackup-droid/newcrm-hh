@@ -10,6 +10,8 @@ import { ACCESS_SCOPE } from '@/modules/enums';
 import { cn } from '@/lib/utils';
 import type { TablesUpdate } from '@/lib/database.types';
 
+import { HierarchyFlowDiagram } from '@/components/dashboards/HierarchyFlowDiagram';
+
 const ACTIONS = ['can_view','can_create','can_edit','can_delete','can_assign','can_approve','can_export'] as const;
 const ACTION_LABEL: Record<string, string> = {
   can_view: 'View', can_create: 'Create', can_edit: 'Edit', can_delete: 'Delete',
@@ -92,12 +94,12 @@ export default function RolesPage() {
   const shownRoles = (roles.data ?? []).filter((r) => !roleFilter || r.id === roleFilter);
 
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-4 p-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-lg font-semibold">Roles &amp; Permissions</h1>
+          <h1 className="text-lg font-semibold">Roles &amp; Reporting Hierarchy</h1>
           <p className="text-[13px] text-muted">
-            The matrix the database reads. Changes take effect on each user&rsquo;s next request —
+            The matrix and reporting tree the database reads. Changes take effect on each user&rsquo;s next request —
             no deploy, no code change.
           </p>
         </div>
@@ -107,6 +109,9 @@ export default function RolesPage() {
           {roles.data?.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
       </header>
+
+      {/* Interactive Reporting Hierarchy Workflow Diagram */}
+      <HierarchyFlowDiagram />
 
       <div className="rounded-md border border-amber/40 bg-amber/10 px-3 py-2 text-[12px] text-amber">
         Founder and Co-Founder always resolve to full access regardless of what this grid says — that
