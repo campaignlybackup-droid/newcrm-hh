@@ -9,6 +9,7 @@ import { useSession, can } from '@/lib/session';
 import { pushToast } from '@/components/ui/Toaster';
 import { RelatedRecords } from './RelatedRecords';
 import { Comments } from './Comments';
+import { ClientContextBanner } from './ClientContextBanner';
 import { isEditable, sections, type FieldDef, type ModuleDef } from '@/modules/types';
 import { cn } from '@/lib/utils';
 
@@ -92,6 +93,10 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
           )}
         </div>
       </header>
+
+      {Boolean(row.client_id || client?.id) && mod.key !== 'clients' && (
+        <ClientContextBanner clientId={String(row.client_id ?? client?.id)} />
+      )}
 
       <nav className="flex gap-1 border-b border-border">
         {(['details', 'related', 'comments', 'history'] as Tab[]).map((t) => (

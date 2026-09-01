@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
@@ -7,19 +8,17 @@ import { useSession } from '@/lib/session';
 import { Card, Stat, Spinner, StatusChip, HealthDot, Empty } from '@/components/ui/primitives';
 import { TeamLoadHeatmap } from '@/components/dashboards/TeamLoadHeatmap';
 import { MyQueue } from '@/components/dashboards/MyQueue';
+import { EditorQueue } from '@/components/dashboards/EditorQueue';
+import { SocialMediaStream } from '@/components/dashboards/SocialMediaStream';
 import { cn } from '@/lib/utils';
 
-/**
- * Role-based dashboards.
- *
- * Every panel below queries the same tables for everyone. What differs is
- * what comes back, because RLS filters it — a manager's "overdue" count is
- * their subtree's, a founder's is the whole agency's. Nothing here branches
- * on role to hide data; the role only decides which PANELS are worth showing.
- */
+type ViewTab = 'auto' | 'overview' | 'editor' | 'social' | 'management';
+
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const [activeTab, setActiveTab] = useState<ViewTab>('auto');
   const level = session?.role.level ?? 99;
+  const roleCode = session?.role.code ?? '';
 
   const summary = useQuery({
     queryKey: ['dashboard', 'summary'],
@@ -37,19 +36,55 @@ export default function DashboardPage() {
   const isManagement = level <= 3;
   const isExecutor = level >= 4;
 
+  const isEditorRole = ['EDIT_LEAD', 'VIDEO_EDITOR', 'GRAPHIC_DESIGNER', 'MOTION_DESIGNER', 'DOP', 'CAMERA_ASSISTANT'].includes(roleCode);
+  const isSocialRole = ['CONTENT_LEAD', 'SOCIAL_EXECUTIVE', 'SOCIAL_MANAGER'].includes(roleCode);
+
   return (
     <div className="space-y-4 p-4">
-      <header>
-        <h1 className="text-lg font-semibold">
-          {greeting()}, {session.user.full_name.split(' ')[0]}
-        </h1>
-        <p className="text-[13px] text-muted">
-          {session.role.name}
-          {session.department.name ? ` · ${session.department.name}` : ''}
-          {' · '}showing everything your access covers
-        </p>
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+        <div>
+          <h1 className="text-lg font-semibold">
+            {greeting()}, {session.user.full_name.split(' ')[0]}
+          </h1>
+          <p className="text-[13px] text-muted">
+            {session.role.name}
+            {session.department.name ? ` · ${session.department.name}` : ''}
+            {' · '}showing role-tailored workspace
+          </p>
+        </div>
+
+        {/* View Switcher for Leadership / Management */}
+        {(isLeadership || isManagement) && (
+          <div className="flex rounded-md border border-border bg-raised p-0.5 text-xs">
+            <button
+              onClick={() => setActiveTab('auto')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'auto' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
+            >
+              Default
+            </button>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'overview' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
+            >
+              Leadership
+            </button>
+            <button
+              onClick={() => setActiveTab('editor')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'editor' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
+            >
+              Editing Suite
+            </button>
+            <button
+              onClick={() => setActiveTab('social')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'social' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
+            >
+              Social Hub
+            </button>
+          </div>
+        )}
       </header>
 
+      {/* Top Stat Summary Grid */}
       <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="My tasks today" value={Number(s.my_tasks_today ?? 0)} />
         <Stat label="My overdue" value={Number(s.my_tasks_overdue ?? 0)}
@@ -59,7 +94,7 @@ export default function DashboardPage() {
         <Stat label="Shoots next 7 days" value={Number(s.shoots_next_7 ?? 0)} />
       </div>
 
-      {isManagement && (
+      {isManagement && (activeTab === 'auto' || activeTab === 'management' || activeTab === 'overview') && (
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Deliverables due this week" value={Number(s.deliverables_due_this_week ?? 0)} />
           <Stat label="Overdue tasks" value={Number(s.overdue_tasks ?? 0)}
@@ -68,11 +103,11 @@ export default function DashboardPage() {
           <Stat label="On-time delivery (90d)"
             value={s.on_time_delivery_pct != null ? `${s.on_time_delivery_pct}%` : '—'}
             tone={Number(s.on_time_delivery_pct ?? 0) >= 90 ? 'good' : 'warn'}
-            hint="Delivered on or before the due date" />
+            hint="Delivered on or before due date" />
         </div>
       )}
 
-      {isLeadership && (
+      {isLeadership && (activeTab === 'auto' || activeTab === 'overview') && (
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Clients not green" value={Number(s.clients_at_risk ?? 0)}
             tone={Number(s.clients_at_risk ?? 0) > 0 ? 'warn' : 'good'} />
@@ -84,14 +119,41 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Main Workspace Panels Grid */}
       <div className="grid gap-3 lg:grid-cols-2">
-        {isExecutor && <MyQueue />}
-        {isManagement && <ClientHealthGrid />}
-        {isManagement && <TeamLoadHeatmap />}
-        {isManagement && <ApprovalsWaiting />}
-        {isLeadership && <OverdueByDepartment rows={(s.overdue_by_department ?? []) as { department: string; overdue: number }[]} />}
-        {isLeadership && <LeadPipeline rows={(s.lead_pipeline ?? []) as { stage: string; count: number; overdue_actions: number }[]} />}
-        <ShootSchedule />
+        {/* Render Workspace Based on Role Code or Selected Tab */}
+        {(activeTab === 'editor' || (activeTab === 'auto' && isEditorRole)) && (
+          <EditorQueue />
+        )}
+
+        {(activeTab === 'social' || (activeTab === 'auto' && isSocialRole)) && (
+          <SocialMediaStream />
+        )}
+
+        {(activeTab === 'auto' && isExecutor && !isEditorRole && !isSocialRole) && (
+          <MyQueue />
+        )}
+
+        {(activeTab === 'overview' || (activeTab === 'auto' && isLeadership)) && (
+          <>
+            <ClientHealthGrid />
+            <TeamLoadHeatmap />
+            <ApprovalsWaiting />
+            <OverdueByDepartment rows={(s.overdue_by_department ?? []) as { department: string; overdue: number }[]} />
+            <LeadPipeline rows={(s.lead_pipeline ?? []) as { stage: string; count: number; overdue_actions: number }[]} />
+            <ShootSchedule />
+          </>
+        )}
+
+        {(activeTab === 'auto' && isManagement && !isLeadership && !isEditorRole && !isSocialRole) && (
+          <>
+            <MyQueue />
+            <ClientHealthGrid />
+            <TeamLoadHeatmap />
+            <ApprovalsWaiting />
+            <ShootSchedule />
+          </>
+        )}
       </div>
     </div>
   );
@@ -114,18 +176,18 @@ function ClientHealthGrid() {
   });
 
   return (
-    <Card title="Client health" action={<Link href="/clients" className="text-[12px] text-accent">All clients</Link>}>
+    <Card title="Client health" action={<Link href="/clients" className="text-[12px] text-accent hover:underline">All clients</Link>}>
       {q.isLoading && <Spinner />}
       {q.data && !q.data.length && <Empty title="No clients in your scope" />}
       <ul className="divide-y divide-border">
         {q.data?.map((c) => (
           <li key={String(c.client_id)} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
-            <Link href={`/clients/${String(c.client_id)}`} className="truncate hover:text-accent">
+            <Link href={`/clients/${String(c.client_id)}`} className="truncate hover:text-accent font-medium">
               {String(c.brand_name)}
             </Link>
             <span className="flex shrink-0 items-center gap-3 text-[12px] text-muted">
               {Number(c.overdue_deliverables) > 0 && (
-                <span className="text-red">{String(c.overdue_deliverables)} overdue</span>
+                <span className="text-red font-medium">{String(c.overdue_deliverables)} overdue</span>
               )}
               {Number(c.pending_approvals) > 0 && <span>{String(c.pending_approvals)} approvals</span>}
               {c.days_to_renewal != null && Number(c.days_to_renewal) <= 60 && (
@@ -154,9 +216,9 @@ function ApprovalsWaiting() {
   });
 
   return (
-    <Card title="Approvals pending" action={<Link href="/approvals" className="text-[12px] text-accent">All</Link>}>
+    <Card title="Approvals pending" action={<Link href="/approvals" className="text-[12px] text-accent hover:underline">All</Link>}>
       {q.isLoading && <Spinner />}
-      {q.data && !q.data.length && <p className="text-[13px] text-muted">Nothing waiting.</p>}
+      {q.data && !q.data.length && <p className="text-[13px] text-muted py-2">Nothing waiting for approval.</p>}
       <ul className="divide-y divide-border">
         {q.data?.map((a) => {
           const overdue = a.due_at != null && new Date(String(a.due_at)) < new Date();
@@ -164,9 +226,9 @@ function ApprovalsWaiting() {
             <li key={String(a.id)} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
               <span className="truncate">
                 {String((a.client as { brand_name?: string })?.brand_name ?? '—')}
-                <span className="text-muted"> · {String(a.level)} · round {String(a.round_no)}</span>
+                <span className="text-muted"> · level {String(a.level)} · round {String(a.round_no)}</span>
               </span>
-              <span className={cn('shrink-0 text-[12px] tabular-nums', overdue ? 'text-red' : 'text-muted')}>
+              <span className={cn('shrink-0 text-[12px] tabular-nums', overdue ? 'text-red font-semibold' : 'text-muted')}>
                 {a.due_at ? new Date(String(a.due_at)).toLocaleDateString() : '—'}
                 {overdue && ' · escalating'}
               </span>
@@ -193,19 +255,19 @@ function ShootSchedule() {
   });
 
   return (
-    <Card title="Upcoming shoots" action={<Link href="/shoots" className="text-[12px] text-accent">All</Link>}>
+    <Card title="Upcoming shoots" action={<Link href="/shoots" className="text-[12px] text-accent hover:underline">All</Link>}>
       {q.isLoading && <Spinner />}
-      {q.data && !q.data.length && <p className="text-[13px] text-muted">No shoots scheduled.</p>}
+      {q.data && !q.data.length && <p className="text-[13px] text-muted py-2">No shoots scheduled.</p>}
       <ul className="divide-y divide-border">
         {q.data?.map((s) => (
           <li key={String(s.id)} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
-            <Link href={`/shoots/${String(s.id)}`} className="truncate hover:text-accent">
+            <Link href={`/shoots/${String(s.id)}`} className="truncate hover:text-accent font-medium">
               {String(s.title)}
-              <span className="text-muted"> · {String((s.client as { brand_name?: string })?.brand_name ?? '')}</span>
+              <span className="text-muted font-normal"> · {String((s.client as { brand_name?: string })?.brand_name ?? '')}</span>
             </Link>
             <span className="flex shrink-0 items-center gap-2 text-[12px] text-muted">
-              <span className="tabular-nums">{String(s.shoot_date)}</span>
-              {s.call_time != null && <span className="tabular-nums">{String(s.call_time).slice(0, 5)}</span>}
+              <span className="tabular-nums font-mono">{String(s.shoot_date)}</span>
+              {s.call_time != null && <span className="tabular-nums font-mono">{String(s.call_time).slice(0, 5)}</span>}
               <StatusChip value={String(s.status)} />
             </span>
           </li>
@@ -219,7 +281,7 @@ function OverdueByDepartment({ rows }: { rows: { department: string; overdue: nu
   const max = Math.max(1, ...rows.map((r) => r.overdue));
   return (
     <Card title="Overdue by department">
-      {!rows.length && <p className="text-[13px] text-muted">Nothing overdue.</p>}
+      {!rows.length && <p className="text-[13px] text-muted py-2">Nothing overdue.</p>}
       <ul className="space-y-1.5">
         {rows.map((r) => (
           <li key={r.department} className="text-[13px]">
@@ -237,14 +299,14 @@ function OverdueByDepartment({ rows }: { rows: { department: string; overdue: nu
 
 function LeadPipeline({ rows }: { rows: { stage: string; count: number; overdue_actions: number }[] }) {
   return (
-    <Card title="Lead pipeline" action={<Link href="/leads" className="text-[12px] text-accent">All leads</Link>}>
-      {!rows.length && <p className="text-[13px] text-muted">No open leads.</p>}
+    <Card title="Lead pipeline" action={<Link href="/leads" className="text-[12px] text-accent hover:underline">All leads</Link>}>
+      {!rows.length && <p className="text-[13px] text-muted py-2">No open leads.</p>}
       <ul className="divide-y divide-border">
         {rows.map((r) => (
           <li key={r.stage} className="flex items-center justify-between py-1.5 text-[13px]">
             <StatusChip value={r.stage} />
             <span className="flex items-center gap-3 text-[12px]">
-              {r.overdue_actions > 0 && <span className="text-red">{r.overdue_actions} follow-ups overdue</span>}
+              {r.overdue_actions > 0 && <span className="text-red font-medium">{r.overdue_actions} follow-ups overdue</span>}
               <span className="tabular-nums text-muted">{r.count}</span>
             </span>
           </li>
