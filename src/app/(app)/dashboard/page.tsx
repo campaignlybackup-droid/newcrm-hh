@@ -15,13 +15,14 @@ import { cn } from '@/lib/utils';
 type ViewTab = 'auto' | 'overview' | 'editor' | 'social' | 'management';
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, isLoading: sessionLoading, error: sessionError } = useSession();
   const [activeTab, setActiveTab] = useState<ViewTab>('auto');
-  const level = session?.role.level ?? 99;
-  const roleCode = session?.role.code ?? '';
+  const level = session?.role?.level ?? 99;
+  const roleCode = session?.role?.code ?? '';
 
   const summary = useQuery({
     queryKey: ['dashboard', 'summary'],
+    enabled: Boolean(session?.authenticated),
     queryFn: async () => {
       const { data, error } = await supabase().rpc('dashboard_summary');
       if (error) throw error;
@@ -29,7 +30,30 @@ export default function DashboardPage() {
     },
   });
 
-  if (!session) return <Spinner />;
+  if (sessionLoading) return <Spinner label="Loading context…" />;
+
+  if (sessionError || !session || !session.authenticated) {
+    return (
+      <div className="p-6">
+        <Card title="Database Setup Required">
+          <div className="space-y-3 p-2 text-xs text-muted">
+            <p className="text-sm font-medium text-foreground">
+              Connected to Supabase, but the database tables (`public.users`, `public.roles`, etc.) have not been created yet on your cloud project.
+            </p>
+            <p>
+              Run this single command in your computer terminal to build all 64 tables and RLS security rules:
+            </p>
+            <pre className="rounded bg-raised p-3 font-mono text-[11px] text-accent select-all">
+              npx supabase login{'\n'}
+              npx supabase link --project-ref bsqzzlbpavmdkwstjbyq{'\n'}
+              npx supabase db push
+            </pre>
+            {sessionError && <p className="text-red font-mono">{String(sessionError)}</p>}
+          </div>
+        </Card>
+      </div>
+    );
+  }
   const s = summary.data ?? {};
 
   const isLeadership = level <= 1;
