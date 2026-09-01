@@ -2,20 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: 250 250 252;
-  --surface: 255 255 255;
-  --raised: 244 245 248;
-  --border: 226 228 234;
-  --fg: 17 20 28;
-  --muted: 105 112 128;
-  --accent: 63 92 222;
-  --green: 22 145 96;
-  --amber: 190 130 12;
-  --red: 202 55 55;
-}
-
-.dark {
+:root, .dark {
   --bg: 13 15 20;
   --surface: 20 23 30;
   --raised: 28 32 41;

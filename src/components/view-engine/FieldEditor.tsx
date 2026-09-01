@@ -57,9 +57,11 @@ export function FieldEditor(props: FieldEditorProps) {
         type="button"
         onClick={() => setEditing(true)}
         onFocus={() => setEditing(true)}
-        className="w-full truncate rounded px-2 py-1 text-left text-[13px] hover:bg-raised focus:bg-raised focus:outline-none"
+        className="group/cell flex w-full items-center justify-between gap-1 truncate rounded px-2 py-1 text-left text-[13px] hover:bg-raised focus:bg-raised focus:outline-none"
+        title="Click cell to edit inline"
       >
-        <ReadOnly field={field} row={row} value={value} />
+        <span className="truncate"><ReadOnly field={field} row={row} value={value} /></span>
+        <span className="opacity-0 group-hover/cell:opacity-60 text-[10px] text-muted font-mono shrink-0">✎</span>
       </button>
     );
   }

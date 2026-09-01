@@ -108,15 +108,18 @@ export default function DashboardPage() {
       )}
 
       {isLeadership && (activeTab === 'auto' || activeTab === 'overview') && (
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Clients not green" value={Number(s.clients_at_risk ?? 0)}
-            tone={Number(s.clients_at_risk ?? 0) > 0 ? 'warn' : 'good'} />
-          <Stat label="Renewals in 60 days" value={Number(s.renewals_in_60 ?? 0)} hint="Alerts fire at 60/30/15/7" />
-          <Stat label="Approvals pending" value={Number(s.approvals_pending ?? 0)} />
-          <Stat label="Overdue by department"
-            value={Array.isArray(s.overdue_by_department) ? (s.overdue_by_department as unknown[]).length : 0}
-            hint="departments with slippage" />
-        </div>
+        <>
+          <FounderQuickNavigator />
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Clients not green" value={Number(s.clients_at_risk ?? 0)}
+              tone={Number(s.clients_at_risk ?? 0) > 0 ? 'warn' : 'good'} />
+            <Stat label="Renewals in 60 days" value={Number(s.renewals_in_60 ?? 0)} hint="Alerts fire at 60/30/15/7" />
+            <Stat label="Approvals pending" value={Number(s.approvals_pending ?? 0)} />
+            <Stat label="Overdue by department"
+              value={Array.isArray(s.overdue_by_department) ? (s.overdue_by_department as unknown[]).length : 0}
+              hint="departments with slippage" />
+          </div>
+        </>
       )}
 
       {/* Main Workspace Panels Grid */}
@@ -313,5 +316,46 @@ function LeadPipeline({ rows }: { rows: { stage: string; count: number; overdue_
         ))}
       </ul>
     </Card>
+  );
+}
+
+function FounderQuickNavigator() {
+  const links = [
+    { label: 'Clients Master', href: '/clients', icon: '🏢' },
+    { label: 'Leads & CRM', href: '/leads', icon: '🎯' },
+    { label: 'Projects', href: '/projects', icon: '📁' },
+    { label: 'Deliverables', href: '/deliverables', icon: '📦' },
+    { label: 'All Tasks', href: '/tasks', icon: '⚡' },
+    { label: 'Shoots & Crew', href: '/shoots', icon: '🎬' },
+    { label: 'Content Calendar', href: '/content_calendar', icon: '📱' },
+    { label: 'Approvals', href: '/approvals', icon: '✅' },
+    { label: 'Asset Library', href: '/assets', icon: '🗂️' },
+    { label: 'Team Availability', href: '/leave_requests', icon: '👥' },
+    { label: 'Roles & Matrix', href: '/settings/roles', icon: '🛡️' },
+    { label: 'Recycle Bin', href: '/settings/recycle-bin', icon: '🗑️' },
+    { label: 'Audit Logs', href: '/settings/audit', icon: '📜' },
+  ];
+
+  return (
+    <div className="rounded-lg border border-border bg-surface p-3.5 shadow-xs">
+      <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2.5">
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5">
+          <span>👑</span> Founder Operations Quick Access
+        </span>
+        <span className="text-[11px] text-muted">1-click access to every agency module & control</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {links.map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-raised px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:border-accent hover:text-accent hover:bg-surface"
+          >
+            <span>{l.icon}</span>
+            <span>{l.label}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
