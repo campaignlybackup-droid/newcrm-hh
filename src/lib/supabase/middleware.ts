@@ -6,7 +6,7 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const path = request.nextUrl.pathname;
-  const isPublic = path.startsWith('/login') || path.startsWith('/auth') || path.startsWith('/api/public');
+  const isPublic = path.startsWith('/login') || path.startsWith('/api/auth') || path.startsWith('/api/public');
 
   // Check for CRM session cookie (set by /api/auth/login)
   const crmSessionCookie = request.cookies.get('crm_user_session')?.value;
