@@ -5,7 +5,7 @@ export const APPROVAL_LEVEL = ['Internal','Lead','Manager','Client'] as const;
 export const PRIORITY = ['Low','Medium','High','Critical'] as const;
 export const HEALTH = ['Green','Amber','Red'] as const;
 export const CLIENT_STATUS = ['Lead','Onboarding','Active','Paused','Churned'] as const;
-export const LEAD_STAGE = ['New','Contacted','Qualified','Proposal Sent','Negotiation','Won','Lost'] as const;
+export const LEAD_STAGE = ['New leads','Cold lead','Warm lead','Call scheduled','Follow up','Long nurture','Meet','Closed','Dead'] as const;
 export const PROJECT_TYPE = ['Retainer','One-off','Campaign'] as const;
 export const PROJECT_STATUS = ['Planned','Active','On Hold','Completed','Cancelled'] as const;
 export const SHOOT_TYPE = ['Reel','Cinematic','Product','Event','Interview','Photoshoot'] as const;
@@ -27,6 +27,8 @@ export const STATUS_TONE: Record<string, 'neutral' | 'info' | 'warn' | 'good' | 
   'Not Started': 'neutral', 'Draft': 'neutral', 'Tentative': 'neutral', 'Planned': 'neutral',
   'In Progress': 'info', 'In Review': 'info', 'Pending': 'info', 'Confirmed': 'info',
   'Scheduled': 'info', 'Onboarding': 'info', 'Contacted': 'info', 'Qualified': 'info',
+  'New leads': 'info', 'Cold lead': 'neutral', 'Warm lead': 'warn', 'Call scheduled': 'info',
+  'Follow up': 'warn', 'Long nurture': 'neutral', 'Meet': 'info', 'Closed': 'good', 'Dead': 'bad',
   'Blocked': 'bad', 'Changes Requested': 'warn', 'Rejected': 'bad', 'Cancelled': 'neutral',
   'Postponed': 'warn', 'Paused': 'warn', 'On Hold': 'warn', 'Lost': 'bad', 'Churned': 'bad',
   'Approved': 'good', 'Delivered': 'good', 'Wrapped': 'good', 'Completed': 'good',

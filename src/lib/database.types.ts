@@ -15,7 +15,7 @@ export type Enums = {
   content_type: "Reel" | "Carousel" | "Static" | "Story" | "Short" | "Long-form Video" | "Blog" | "Newsletter";
   employment_type: "Full-time" | "Part-time" | "Intern" | "Freelancer" | "Contract" | "External";
   health_status: "Green" | "Amber" | "Red";
-  lead_stage: "New" | "Contacted" | "Qualified" | "Proposal Sent" | "Negotiation" | "Won" | "Lost";
+  lead_stage: "New leads" | "Cold lead" | "Warm lead" | "Call scheduled" | "Follow up" | "Long nurture" | "Meet" | "Closed" | "Dead";
   leave_status: "Requested" | "Approved" | "Rejected" | "Cancelled";
   leave_type: "Casual" | "Sick" | "Earned" | "Unpaid" | "Comp Off" | "Holiday";
   meeting_type: "Kickoff" | "Review" | "Strategy" | "Internal" | "Shoot Recce" | "Training";

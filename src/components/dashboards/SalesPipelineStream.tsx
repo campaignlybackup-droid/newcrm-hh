@@ -85,8 +85,8 @@ export function SalesPipelineStream() {
           {leadsQuery.data && !leadsQuery.data.length && <Empty title="No active leads" />}
           <ul className="divide-y divide-border">
             {leadsQuery.data?.map((l) => {
-              const stage = String(l.stage ?? 'New');
-              const isWon = stage === 'Won';
+              const stage = String(l.stage ?? 'New leads');
+              const isWon = stage === 'Closed' || stage === 'Meet';
               const isConverted = Boolean(l.converted_client_id);
               return (
                 <li key={String(l.id)} className="py-2.5 text-[13px]">

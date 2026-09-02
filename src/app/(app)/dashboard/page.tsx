@@ -66,7 +66,7 @@ export default function DashboardPage() {
 
   const isEditorRole = ['EDIT_LEAD', 'VIDEO_EDITOR', 'GRAPHIC_DESIGNER', 'MOTION_DESIGNER', 'DOP', 'CAMERA_ASSISTANT'].includes(roleCode);
   const isSocialRole = ['CONTENT_LEAD', 'SOCIAL_EXECUTIVE', 'SOCIAL_MANAGER'].includes(roleCode);
-  const isSalesRole = ['SALES_HEAD', 'SALES_EXECUTIVE', 'BUSINESS_DEVELOPMENT'].includes(roleCode);
+  const isSalesRole = ['SALES_HEAD', 'SALES_EXECUTIVE', 'BUSINESS_DEVELOPMENT', 'PRODUCTION_HEAD', 'OPSHR_HEAD'].includes(roleCode);
 
   return (
     <div className="space-y-4 p-4">
