@@ -164,19 +164,45 @@ update public.role_permissions
  where module = 'leads'
    and role_id in (select id from public.roles where code in ('PRODUCTION_HEAD', 'OPSHR_HEAD', 'SOCIAL_HEAD', 'SALES_HEAD'));
 
--- 6. Seed auth.users for all team members with password 'Password123!'
+-- 6. Seed auth.users for all team members with password 'Password123!' including GoTrue instance_id & metadata
 do $$
 declare
   v_enc_pass text := extensions.crypt('Password123!', extensions.gen_salt('bf'));
 begin
   if exists (select 1 from information_schema.tables where table_schema = 'auth' and table_name = 'users') then
-    insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
-    select u.auth_id, 'authenticated', 'authenticated', u.email, v_enc_pass, now()
+    insert into auth.users (
+      id,
+      instance_id,
+      aud,
+      role,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      raw_app_meta_data,
+      raw_user_meta_data,
+      created_at,
+      updated_at
+    )
+    select 
+      u.auth_id,
+      '00000000-0000-4000-8000-000000000000'::uuid,
+      'authenticated',
+      'authenticated',
+      u.email,
+      v_enc_pass,
+      now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{}'::jsonb,
+      now(),
+      now()
     from public.users u
     where u.auth_id is not null
     on conflict (id) do update set
+      instance_id = '00000000-0000-4000-8000-000000000000'::uuid,
       email = excluded.email,
       encrypted_password = excluded.encrypted_password,
-      email_confirmed_at = excluded.email_confirmed_at;
+      email_confirmed_at = excluded.email_confirmed_at,
+      raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
+      raw_user_meta_data = '{}'::jsonb;
   end if;
 end $$;
