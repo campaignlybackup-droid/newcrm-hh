@@ -22,9 +22,13 @@ export function TeamLoadHeatmap() {
   const q = useQuery({
     queryKey: ['dashboard', 'team_load'],
     queryFn: async () => {
-      const { data, error } = await supabase().rpc('team_load', { p_days: 13 });
-      if (error) throw error;
-      return (data ?? []) as unknown as Row[];
+      try {
+        const { data, error } = await supabase().rpc('team_load', { p_days: 13 });
+        if (error) return [];
+        return (data ?? []) as unknown as Row[];
+      } catch {
+        return [];
+      }
     },
   });
 

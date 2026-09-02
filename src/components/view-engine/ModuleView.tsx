@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ListView } from './ListView';
@@ -50,9 +50,15 @@ export function ModuleView({ mod }: { mod: ModuleDef }) {
 
   const timezone = session?.user.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  const isInitialMount = useRef(true);
+
   // Keep the URL in step so a filtered view is a shareable link. What the
   // recipient sees is still bounded by their own permissions.
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     const p = filtersToParams(filters);
     p.set('view', viewMode);
     router.replace(`?${p.toString()}`, { scroll: false });

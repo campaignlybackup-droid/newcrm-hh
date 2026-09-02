@@ -1,9 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { use, Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { ModuleView } from '@/components/view-engine/ModuleView';
 import { getModule } from '@/modules/registry';
+import { Spinner } from '@/components/ui/primitives';
 
 /**
  * One route serves every module. The registry decides the fields, the view
@@ -13,5 +14,9 @@ export default function ModulePage({ params }: { params: Promise<{ module: strin
   const { module } = use(params);
   const mod = getModule(module);
   if (!mod) notFound();
-  return <ModuleView mod={mod} />;
+  return (
+    <Suspense fallback={<div className="p-8 flex items-center justify-center"><Spinner /></div>}>
+      <ModuleView mod={mod} />
+    </Suspense>
+  );
 }
