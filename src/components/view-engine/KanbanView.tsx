@@ -24,34 +24,36 @@ export function KanbanView({ mod, rows, loading, session, groupBy, onGroupByChan
   const field = mod.fields.find((f) => f.key === groupBy);
   const relOptions = useOptions(field?.relation);
 
+  const safeRows = rows ?? [];
+
   const columns = useMemo(() => {
     if (field?.options?.length) return field.options.map((o) => ({ id: o, label: o }));
     if (field?.relation) {
-      const present = new Set(rows.map((r) => String(r[groupBy] ?? '')));
+      const present = new Set(safeRows.map((r) => String(r[groupBy] ?? '')));
       return [
         ...(relOptions.data ?? []).filter((o) => present.has(o.id)),
         { id: '', label: 'Unassigned' },
       ];
     }
-    const distinct = [...new Set(rows.map((r) => String(r[groupBy] ?? '')))];
+    const distinct = [...new Set(safeRows.map((r) => String(r[groupBy] ?? '')))];
     return distinct.map((d) => ({ id: d, label: d || 'Unassigned' }));
-  }, [field, rows, groupBy, relOptions.data]);
+  }, [field, safeRows, groupBy, relOptions.data]);
 
   const grouped = useMemo(() => {
     const m = new Map<string, Record<string, unknown>[]>();
     for (const c of columns) m.set(c.id, []);
-    for (const r of rows) {
+    for (const r of safeRows) {
       const key = String(r[groupBy] ?? '');
       if (!m.has(key)) m.set(key, []);
       m.get(key)!.push(r);
     }
     return m;
-  }, [rows, columns, groupBy]);
+  }, [safeRows, columns, groupBy]);
 
   const canDrag = field ? can(session, mod.key, field.permissionAction ?? 'edit') && field.editable !== false : false;
 
-  if (loading && !rows.length) return <Spinner />;
-  if (!rows.length) return <Empty title={`No ${mod.label.toLowerCase()} match these filters`} />;
+  if (loading && !safeRows.length) return <Spinner />;
+  if (!safeRows.length) return <Empty title={`No ${mod.label.toLowerCase()} match these filters`} />;
 
   return (
     <div className="space-y-2">

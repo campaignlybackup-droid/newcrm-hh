@@ -55,15 +55,16 @@ export function ListView({
     return { ok: true, why: '' };
   };
 
+  const safeRows = rows ?? [];
   const tableColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
     const select: ColumnDef<Record<string, unknown>> = {
       id: '__select',
       size: 34,
       header: () => (
         <input type="checkbox" className="h-3.5 w-3.5 accent-[rgb(var(--accent))]"
-          checked={rows.length > 0 && selected.size === rows.length}
+          checked={safeRows.length > 0 && selected.size === safeRows.length}
           onChange={(e) => onSelectedChange(
-            e.target.checked ? new Set(rows.map((r) => String(r.id))) : new Set())} />
+            e.target.checked ? new Set(safeRows.map((r) => String(r.id))) : new Set())} />
       ),
       cell: ({ row }) => {
         const id = String(row.original.id);
@@ -120,18 +121,18 @@ export function ListView({
   }, [visibleFields, rows, selected, widths, mod, session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const table = useReactTable({
-    data: rows,
+    data: safeRows,
     columns: tableColumns,
     state: { sorting },
     onSortingChange: (u) => onSortingChange(typeof u === 'function' ? u(sorting) : u),
     manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: 'onChange',
-    getRowId: (r) => String(r.id),
+    getRowId: (r, i) => String(r?.id ?? `row_${i}`),
   });
 
-  if (loading && !rows.length) return <Spinner label={`Loading ${mod.label.toLowerCase()}`} />;
-  if (!rows.length) {
+  if (loading && !safeRows.length) return <Spinner label={`Loading ${mod.label.toLowerCase()}`} />;
+  if (!safeRows.length) {
     return <Empty title={`No ${mod.label.toLowerCase()} match these filters`}
       hint="Adjust the date range or clear a filter. If you expected to see more, your access scope may be narrower than the data set." />;
   }

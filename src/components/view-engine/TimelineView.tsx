@@ -27,9 +27,10 @@ export function TimelineView({ mod, rows }: Props) {
   const groupOptions = useOptions(groupField?.relation);
 
   const pxPerDay = zoom === 'week' ? 34 : zoom === 'month' ? 12 : 5;
+  const safeRows = rows ?? [];
 
   const { start, end, days } = useMemo(() => {
-    const dates = rows.flatMap((r) => [r[cfg.start], r[cfg.end]])
+    const dates = safeRows.flatMap((r) => [r[cfg.start], r[cfg.end]])
       .filter(Boolean).map((d) => new Date(String(d)).getTime())
       .filter((n) => !Number.isNaN(n));
     const today = Date.now();
@@ -38,26 +39,26 @@ export function TimelineView({ mod, rows }: Props) {
     const s = new Date(min - 3 * DAY);
     const e = new Date(max + 3 * DAY);
     return { start: s, end: e, days: Math.ceil((e.getTime() - s.getTime()) / DAY) };
-  }, [rows, cfg]);
+  }, [safeRows, cfg]);
 
   const groups = useMemo(() => {
     const label = (id: string) => {
       if (!id) return 'Unassigned';
       const opt = groupOptions.data?.find((o) => o.id === id);
       if (opt) return opt.label;
-      const row = rows.find((r) => String(r[cfg.groupBy!] ?? '') === id);
+      const row = safeRows.find((r) => String(r[cfg.groupBy!] ?? '') === id);
       const embed = row?.[cfg.groupBy!.replace(/_id$/, '')] as Record<string, unknown> | undefined;
       return String(embed?.brand_name ?? embed?.full_name ?? embed?.name ?? id.slice(0, 8));
     };
     const m = new Map<string, Record<string, unknown>[]>();
-    for (const r of rows) {
+    for (const r of safeRows) {
       const k = cfg.groupBy ? String(r[cfg.groupBy] ?? '') : '';
       if (!m.has(k)) m.set(k, []);
       m.get(k)!.push(r);
     }
     return [...m].map(([id, items]) => ({ id, label: label(id), items }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [rows, cfg, groupOptions.data]);
+  }, [safeRows, cfg, groupOptions.data]);
 
   if (!rows.length) return <Empty title={`No ${mod.label.toLowerCase()} to place on a timeline`} />;
 

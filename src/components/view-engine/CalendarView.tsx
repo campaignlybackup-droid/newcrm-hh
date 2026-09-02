@@ -32,9 +32,10 @@ export function CalendarView({ mod, rows, session, timezone }: Props) {
   const cfg = mod.calendar!;
 
   const editable = can(session, mod.key, 'edit');
+  const safeRows = rows ?? [];
 
   const events = useMemo(
-    () => rows.map((r) => {
+    () => safeRows.map((r) => {
       const start = r[cfg.start] as string | null;
       const end = cfg.end ? (r[cfg.end] as string | null) : null;
       const status = String(r.status ?? r.approval_status ?? '');
