@@ -29,19 +29,23 @@ export function CreateView({ mod }: { mod: ModuleDef }) {
   /** Warn before insert on a similar client or a duplicate contact email. */
   const checkDuplicates = async () => {
     if (mod.key !== 'clients') return;
-    const { data } = await supabase().rpc('fn_check_duplicate_client', {
-      p_legal_name: (values.legal_name as string) ?? '',
-      p_brand_name: (values.brand_name as string) ?? '',
-      p_contact_email: null,
-    });
-    const r = data as { has_warning?: boolean; similar_clients?: { brand_name: string }[] } | null;
-    if (r?.has_warning) {
-      setDupWarning(
-        `Similar client${(r.similar_clients?.length ?? 0) > 1 ? 's' : ''} already exist: ` +
-        (r.similar_clients ?? []).map((c) => c.brand_name).join(', ') +
-        '. Save anyway only if this is genuinely a different account.',
-      );
-      return;
+    try {
+      const { data } = await supabase().rpc('fn_check_duplicate_client', {
+        p_legal_name: (values.legal_name as string) ?? '',
+        p_brand_name: (values.brand_name as string) ?? '',
+        p_contact_email: null,
+      });
+      const r = data as { has_warning?: boolean; similar_clients?: { brand_name: string }[] } | null;
+      if (r?.has_warning) {
+        setDupWarning(
+          `Similar client${(r.similar_clients?.length ?? 0) > 1 ? 's' : ''} already exist: ` +
+          (r.similar_clients ?? []).map((c) => c.brand_name).join(', ') +
+          '. Save anyway only if this is genuinely a different account.',
+        );
+        return;
+      }
+    } catch {
+      // Ignore RPC duplicate check error
     }
     setDupWarning(null);
   };
