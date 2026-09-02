@@ -21,22 +21,32 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (toSet: { name: string; value: string; options?: CookieOptions }[]) => {
-          toSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    },
-  );
+  let user = null;
 
-  const { data: { user } } = await supabase.auth.getUser();
+  try {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          cookies: {
+            getAll: () => request.cookies.getAll(),
+            setAll: (toSet: { name: string; value: string; options?: CookieOptions }[]) => {
+              toSet.forEach(({ name, value }) => request.cookies.set(name, value));
+              response = NextResponse.next({ request });
+              toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+            },
+          },
+        },
+      );
+
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    }
+  } catch (err) {
+    // Ignore initialization errors so the middleware doesn't crash the entire app
+    console.warn('Middleware Supabase init failed:', err);
+  }
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
