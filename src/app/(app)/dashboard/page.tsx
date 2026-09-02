@@ -13,9 +13,10 @@ import { SocialMediaStream } from '@/components/dashboards/SocialMediaStream';
 import { SalesPipelineStream } from '@/components/dashboards/SalesPipelineStream';
 import { HierarchyFlowDiagram } from '@/components/dashboards/HierarchyFlowDiagram';
 import { FounderAvailabilityCalendar } from '@/components/dashboards/FounderAvailabilityCalendar';
+import { TeamAndClientCardsView } from '@/components/dashboards/TeamAndClientCardsView';
 import { cn } from '@/lib/utils';
 
-type ViewTab = 'auto' | 'overview' | 'sales' | 'editor' | 'social' | 'hierarchy';
+type ViewTab = 'auto' | 'cards' | 'overview' | 'sales' | 'editor' | 'social' | 'hierarchy';
 
 export default function DashboardPage() {
   const { data: session, isLoading: sessionLoading, error: sessionError } = useSession();
@@ -90,6 +91,12 @@ export default function DashboardPage() {
               className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'auto' ? 'bg-surface text-foreground shadow-xs' : 'text-muted hover:text-foreground')}
             >
               Default
+            </button>
+            <button
+              onClick={() => setActiveTab('cards')}
+              className={cn('rounded px-2.5 py-1 font-medium transition-colors', activeTab === 'cards' ? 'bg-accent text-white shadow-xs font-bold' : 'text-accent hover:text-accent')}
+            >
+              👑 Team &amp; Client Cards
             </button>
             <button
               onClick={() => setActiveTab('overview')}
@@ -169,6 +176,8 @@ export default function DashboardPage() {
       {/* Main Workspace Panels Grid */}
       <div className="grid gap-3 lg:grid-cols-2">
         {/* Render Workspace Based on Role Code or Selected Tab */}
+        {activeTab === 'cards' && <TeamAndClientCardsView />}
+
         {activeTab === 'hierarchy' && <HierarchyFlowDiagram />}
 
         {(activeTab === 'sales' || (activeTab === 'auto' && isSalesRole)) && (
@@ -189,6 +198,7 @@ export default function DashboardPage() {
 
         {(activeTab === 'overview' || (activeTab === 'auto' && isLeadership)) && (
           <>
+            <TeamAndClientCardsView />
             <HierarchyFlowDiagram />
             <ClientHealthGrid />
             <TeamLoadHeatmap />
