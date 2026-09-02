@@ -10,6 +10,7 @@ import { pushToast } from '@/components/ui/Toaster';
 import { RelatedRecords } from './RelatedRecords';
 import { Comments } from './Comments';
 import { ClientContextBanner } from './ClientContextBanner';
+import { ClientProjectSuite } from './ClientProjectSuite';
 import { isEditable, sections, type FieldDef, type ModuleDef } from '@/modules/types';
 import { cn } from '@/lib/utils';
 
@@ -108,9 +109,16 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
         ))}
       </nav>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto space-y-3">
         {tab === 'details' && (
-          <div className="grid gap-3 lg:grid-cols-2">
+          <>
+            {mod.key === 'clients' && (
+              <ClientProjectSuite
+                clientId={id}
+                clientName={String(row.brand_name ?? row.legal_name ?? 'Client')}
+              />
+            )}
+            <div className="grid gap-3 lg:grid-cols-2">
             {sections(mod).map((s) => (
               <Card key={s.name} title={s.name}>
                 <dl className="space-y-2.5">
@@ -147,7 +155,8 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
               </Card>
             ))}
           </div>
-        )}
+        </>
+      )}
 
         {tab === 'related' && <RelatedRecords mod={mod} row={row} />}
         {tab === 'comments' && <Comments entityType={mod.table} entityId={id} clientId={(row.client_id as string) ?? null} />}
