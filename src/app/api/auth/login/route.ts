@@ -22,7 +22,7 @@ function defaultPermsForLevel(level: number, roleCode: string): Record<string, R
       // Founder / Co-Founder: everything
       perms[m] = { view: true, create: true, edit: true, delete: true, assign: true, approve: true, export: true };
     } else if (level === 2) {
-      // Department Head
+      // Department Head (e.g. Manav)
       perms[m] = { view: true, create: true, edit: true, delete: false, assign: true, approve: true, export: true };
       if (m === 'settings' || m === 'audit_log') {
         perms[m] = { view: true, create: false, edit: false, delete: false, assign: false, approve: false, export: false };
@@ -75,9 +75,15 @@ function defaultPermsForLevel(level: number, roleCode: string): Record<string, R
 }
 
 function defaultScopesForLevel(level: number): Record<string, string> {
-  if (level <= 1) return {}; // Founder gets ALL implicitly
-  if (level <= 3) return {}; // Managers get SUBTREE, handled by RLS
-  return {}; // Executors get OWN, handled by RLS
+  if (level <= 1) {
+    // Founder / Co-Founder gets ALL implicitly for everything
+    return { clients: 'ALL', leads: 'ALL', projects: 'ALL', people: 'ALL', deliverables: 'ALL', tasks: 'ALL' };
+  }
+  if (level === 2) {
+    // Department Heads get ALL for clients, projects, leads, people; SUBTREE for rest
+    return { clients: 'ALL', leads: 'ALL', projects: 'ALL', people: 'ALL' };
+  }
+  return {}; 
 }
 
 export async function POST(request: NextRequest) {
