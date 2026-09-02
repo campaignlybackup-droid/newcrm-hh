@@ -58,6 +58,8 @@ export function TeamAndClientCardsView() {
 
   // Form states for Team Member Edit Modal
   const [newManagerId, setNewManagerId] = useState<string>('');
+  const [newMemberStatus, setNewMemberStatus] = useState<string>('Active');
+  const [newMemberCapacity, setNewMemberCapacity] = useState<number>(40);
   const [newClientAssign, setNewClientAssign] = useState<{ clientId: string; roleOnAccount: string }>({ clientId: '', roleOnAccount: 'Team Member' });
 
   // Form states for Client Edit Modal
@@ -246,15 +248,20 @@ export function TeamAndClientCardsView() {
 
   // 3. Mutations for Founder Nimit
   const updateMemberMutation = useMutation({
-    mutationFn: async ({ memberId, managerId }: { memberId: string; managerId: string | null }) => {
+    mutationFn: async ({ memberId, managerId, status, capacity }: { memberId: string; managerId: string | null; status: string; capacity: number }) => {
       const { error } = await supabase()
         .from('users')
-        .update({ manager_id: managerId })
+        .update({
+          manager_id: managerId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          status: status as any,
+          weekly_capacity_hours: capacity,
+        })
         .eq('id', memberId);
       if (error) throw error;
     },
     onSuccess: () => {
-      pushToast('Team member manager updated');
+      pushToast('Team member profile and assignments updated');
       queryClient.invalidateQueries({ queryKey: ['founder_team_cards'] });
       setEditingMember(null);
     },
@@ -435,16 +442,18 @@ export function TeamAndClientCardsView() {
 
               {/* Founder Controls Footer */}
               <div className="mt-3.5 border-t border-border pt-2.5 flex items-center justify-between">
-                <StatusChip value={m.status} />
+                <StatusChip value={m.status as any} />
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setEditingMember(m);
                     setNewManagerId(m.manager?.id ?? '');
+                    setNewMemberStatus(m.status);
+                    setNewMemberCapacity(m.weekly_capacity_hours);
                   }}
                 >
-                  ✏️ Edit &amp; Assign
+                  ✏️ Update &amp; Assign Member
                 </Button>
               </div>
             </div>
@@ -567,7 +576,7 @@ export function TeamAndClientCardsView() {
           <div className="w-full max-w-md space-y-4 rounded-xl border border-border bg-surface p-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pb-2">
               <h3 className="text-base font-bold text-foreground">
-                Edit &amp; Assign — {editingMember.full_name}
+                Update &amp; Assign — {editingMember.full_name}
               </h3>
               <button onClick={() => setEditingMember(null)} className="text-muted hover:text-foreground">✕</button>
             </div>
@@ -587,6 +596,30 @@ export function TeamAndClientCardsView() {
                       <option key={u.id} value={u.id}>{u.full_name} ({u.role?.name ?? 'User'})</option>
                     ))}
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-medium text-muted mb-1">Status:</label>
+                  <select
+                    value={newMemberStatus}
+                    onChange={(e) => setNewMemberStatus(e.target.value)}
+                    className="w-full rounded-md border border-border bg-raised p-2 text-foreground"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="On Leave">On Leave</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium text-muted mb-1">Capacity (Hours/wk):</label>
+                  <input
+                    type="number"
+                    value={newMemberCapacity}
+                    onChange={(e) => setNewMemberCapacity(Number(e.target.value))}
+                    className="w-full rounded-md border border-border bg-raised p-2 text-foreground"
+                  />
+                </div>
               </div>
 
               <div className="border-t border-border pt-3">
@@ -637,10 +670,12 @@ export function TeamAndClientCardsView() {
                   updateMemberMutation.mutate({
                     memberId: editingMember.id,
                     managerId: newManagerId || null,
+                    status: newMemberStatus,
+                    capacity: newMemberCapacity,
                   });
                 }}
               >
-                Save Changes
+                Save Member Changes
               </Button>
             </div>
           </div>

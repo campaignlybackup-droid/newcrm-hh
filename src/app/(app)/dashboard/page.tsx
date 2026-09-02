@@ -132,8 +132,8 @@ export default function DashboardPage() {
         )}
       </header>
 
-      {/* Founder Live Availability & Office Hours Calendar */}
-      <FounderAvailabilityCalendar />
+      {/* Founder Live Availability & Office Hours Calendar — Only visible to Founder Nimit */}
+      {isLeadership && <FounderAvailabilityCalendar />}
 
       {/* Top Stat Summary Grid */}
       <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
