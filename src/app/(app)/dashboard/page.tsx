@@ -12,6 +12,7 @@ import { EditorQueue } from '@/components/dashboards/EditorQueue';
 import { SocialMediaStream } from '@/components/dashboards/SocialMediaStream';
 import { SalesPipelineStream } from '@/components/dashboards/SalesPipelineStream';
 import { HierarchyFlowDiagram } from '@/components/dashboards/HierarchyFlowDiagram';
+import { FounderAvailabilityCalendar } from '@/components/dashboards/FounderAvailabilityCalendar';
 import { cn } from '@/lib/utils';
 
 type ViewTab = 'auto' | 'overview' | 'sales' | 'editor' | 'social' | 'hierarchy';
@@ -123,6 +124,9 @@ export default function DashboardPage() {
           </div>
         )}
       </header>
+
+      {/* Founder Live Availability & Office Hours Calendar */}
+      <FounderAvailabilityCalendar />
 
       {/* Top Stat Summary Grid */}
       <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
