@@ -198,15 +198,16 @@ function HistoryTab({ entityType, entityId }: { entityType: string; entityId: st
     <Card title={`History · ${rows.length} change${rows.length === 1 ? '' : 's'}`}>
       {!rows.length && <p className="text-[13px] text-muted">No recorded changes yet.</p>}
       <ol className="space-y-2">
-        {rows.map((h) => (
-          <li key={h.id} className="flex gap-3 border-l-2 border-border pl-3 text-[13px]">
-            <Avatar name={h.actor_name} size={20} />
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {rows.map((h: any) => (
+          <li key={String(h.id)} className="flex gap-3 border-l-2 border-border pl-3 text-[13px]">
+            <Avatar name={String(h.actor_name ?? 'User')} size={20} />
             <div className="min-w-0 flex-1">
               <p>
-                <span className="font-medium">{h.is_system ? 'System' : h.actor_name}</span>{' '}
-                <span className="text-muted">{h.summary}</span>
+                <span className="font-medium">{h.is_system ? 'System' : String(h.actor_name ?? 'User')}</span>{' '}
+                <span className="text-muted">{String(h.summary ?? '')}</span>
               </p>
-              <p className="text-[11px] text-muted">{new Date(h.changed_at).toLocaleString()}</p>
+              <p className="text-[11px] text-muted">{h.changed_at ? new Date(String(h.changed_at)).toLocaleString() : 'Recently'}</p>
             </div>
           </li>
         ))}
