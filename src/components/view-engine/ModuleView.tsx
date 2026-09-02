@@ -10,6 +10,7 @@ import { TimelineView } from './TimelineView';
 import { FilterBar } from './FilterBar';
 import { SavedViews, type SavedView } from './SavedViews';
 import { BulkBar } from './BulkBar';
+import { BulkUploaderModal } from './BulkUploaderModal';
 import { Button, ErrorBox } from '@/components/ui/primitives';
 import { useRecords } from '@/lib/records';
 import { useSession, can } from '@/lib/session';
@@ -47,6 +48,7 @@ export function ModuleView({ mod }: { mod: ModuleDef }) {
   const [activeView, setActiveView] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [showColumns, setShowColumns] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const timezone = session?.user.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -131,12 +133,19 @@ export function ModuleView({ mod }: { mod: ModuleDef }) {
           )}
 
           {can(session, mod.key, 'create') && (
-            <Link href={`/${mod.key}/new`}>
-              <Button variant="primary">New {mod.singular.toLowerCase()}</Button>
-            </Link>
+            <>
+              <Button variant="outline" onClick={() => setImportModalOpen(true)}>Import</Button>
+              <Link href={`/${mod.key}/new`}>
+                <Button variant="primary">New {mod.singular.toLowerCase()}</Button>
+              </Link>
+            </>
           )}
         </div>
       </header>
+
+      {importModalOpen && (
+        <BulkUploaderModal mod={mod} onClose={() => setImportModalOpen(false)} />
+      )}
 
       <SavedViews
         mod={mod}
