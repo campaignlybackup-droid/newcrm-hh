@@ -185,6 +185,7 @@ export default function DashboardPage() {
 
         {(activeTab === 'overview' || (activeTab === 'auto' && isLeadership)) && (
           <>
+            <HierarchyFlowDiagram />
             <ClientHealthGrid />
             <TeamLoadHeatmap />
             <ApprovalsWaiting />
