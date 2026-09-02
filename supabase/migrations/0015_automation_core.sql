@@ -122,7 +122,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 declare v_tz text;
 begin
   select timezone into v_tz from public.clients where id = new.client_id;
-  v_tz := coalesce(v_tz, 'Asia/Kolkata');
+  v_tz := coalesce(v_tz, 'Asia/Dubai');
 
   -- Store UTC, render in the viewer's timezone. Every date filter compares
   -- this column, which is what makes the presets correct across timezones.

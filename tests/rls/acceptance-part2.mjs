@@ -54,7 +54,7 @@ export async function run({ db, as, count, C, APP, AUTH }) {
     Number.isInteger(tokyo) && Number.isInteger(la), `tokyo=${tokyo} la=${la}`);
   const overdue = Number((await db.query(`
     select count(*) from public.tasks
-     where deleted_at is null and due_date < (now() at time zone 'Asia/Kolkata')::date
+     where deleted_at is null and due_date < (now() at time zone 'Asia/Dubai')::date
        and status not in ('Delivered','Approved','Cancelled')`)).rows[0].count);
   check('the Overdue preset resolves against the viewer timezone', Number.isInteger(overdue));
   const storedUtc = (await db.query(

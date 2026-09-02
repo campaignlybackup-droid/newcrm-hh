@@ -65,7 +65,7 @@ create table if not exists public.users (
   exited_on              date,
   status                 user_status not null default 'Invited',
   avatar_url             text,
-  timezone               text not null default 'Asia/Kolkata',
+  timezone               text not null default 'Asia/Dubai',
   skills                 text[] not null default '{}',
   weekly_capacity_hours  numeric(5,2) not null default 40 check (weekly_capacity_hours >= 0),
   google_calendar_id     text,

@@ -12,7 +12,7 @@ create table if not exists public.meetings (
   title         text not null,
   starts_at     timestamptz not null,
   duration_mins int not null default 30 check (duration_mins > 0),
-  timezone      text not null default 'Asia/Kolkata',
+  timezone      text not null default 'Asia/Dubai',
   location      text,
   meeting_link  text,
   agenda        text,

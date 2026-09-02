@@ -38,7 +38,7 @@ select v.id::uuid, v.auth_id::uuid, v.full_name, v.email,
        (select id from public.departments where code = v.dept_code),
        nullif(v.manager_id, '')::uuid,
        v.employment::employment_type, date '2025-04-01', 'Active'::user_status,
-       'Asia/Kolkata', v.skills::text[], v.capacity
+       'Asia/Dubai', v.skills::text[], v.capacity
 from (values
   ('00000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','Ira Founder',      'founder@agency.test',   'FOUNDER',          null,        '',                                     'Full-time','{}',40),
   ('00000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','Cyrus Co-Founder', 'cofounder@agency.test', 'CO_FOUNDER',       null,        '00000000-0000-4000-8000-000000000001','Full-time','{}',40),
@@ -83,12 +83,12 @@ select v.id::uuid, v.legal_name, v.brand_name, v.industry, v.city, v.tz, v.statu
        date '2025-06-01', date '2025-06-01', date '2026-05-31', date '2026-04-30', 30,
        v.am::uuid, v.tags::text[], '00000000-0000-4000-8000-000000000001'::uuid
 from (values
-  ('20000000-0000-4000-8000-000000000001','Aurora Wellness Pvt Ltd','Aurora','Wellness','Mumbai','Asia/Kolkata','Active','High',    '00000000-0000-4000-8000-0000000000a0','{"reels","design"}'),
-  ('20000000-0000-4000-8000-000000000002','Basil Foods LLP',        'Basil', 'F&B',     'Pune',  'Asia/Kolkata','Active','Medium',  '00000000-0000-4000-8000-0000000000a0','{"reels"}'),
-  ('20000000-0000-4000-8000-000000000003','Cobalt Interiors',       'Cobalt','Interiors','Delhi','Asia/Kolkata','Active','Medium',  '00000000-0000-4000-8000-0000000000a0','{"design"}'),
-  ('20000000-0000-4000-8000-000000000004','Dune Travel Co',         'Dune',  'Travel',  'Goa',   'Asia/Kolkata','Active','High',    '00000000-0000-4000-8000-0000000000b0','{"reels","social"}'),
-  ('20000000-0000-4000-8000-000000000005','Ember Fitness',          'Ember', 'Fitness', 'Bengaluru','Asia/Kolkata','Active','Low',  '00000000-0000-4000-8000-0000000000b0','{"social"}'),
-  ('20000000-0000-4000-8000-000000000006','Fable Studios',          'Fable', 'Media',   'Chennai','Asia/Kolkata','Active','High',   '00000000-0000-4000-8000-0000000000c0','{"cinematic"}')
+  ('20000000-0000-4000-8000-000000000001','Aurora Wellness FZ-LLC','Aurora','Wellness','Dubai','Asia/Dubai','Active','High',    '00000000-0000-4000-8000-0000000000a0','{"reels","design"}'),
+  ('20000000-0000-4000-8000-000000000002','Basil Foods LLC',        'Basil', 'F&B',     'Dubai', 'Asia/Dubai','Active','Medium',  '00000000-0000-4000-8000-0000000000a0','{"reels"}'),
+  ('20000000-0000-4000-8000-000000000003','Cobalt Interiors UAE',   'Cobalt','Interiors','Dubai','Asia/Dubai','Active','Medium',  '00000000-0000-4000-8000-0000000000a0','{"design"}'),
+  ('20000000-0000-4000-8000-000000000004','Dune Travel Co',         'Dune',  'Travel',  'Dubai', 'Asia/Dubai','Active','High',    '00000000-0000-4000-8000-0000000000b0','{"reels","social"}'),
+  ('20000000-0000-4000-8000-000000000005','Ember Fitness UAE',      'Ember', 'Fitness', 'Dubai', 'Asia/Dubai','Active','Low',  '00000000-0000-4000-8000-0000000000b0','{"social"}'),
+  ('20000000-0000-4000-8000-000000000006','Fable Studios Dubai',    'Fable', 'Media',   'Dubai', 'Asia/Dubai','Active','High',   '00000000-0000-4000-8000-0000000000c0','{"cinematic"}')
 ) as v(id, legal_name, brand_name, industry, city, tz, status, priority, am, tags)
 on conflict (id) do nothing;
 
@@ -142,7 +142,7 @@ insert into public.users (id, auth_id, full_name, email, role_id, client_id,
                           employment_type, status, timezone)
 select v.id::uuid, v.auth_id::uuid, v.full_name, v.email,
        (select id from public.roles where code = 'CLIENT_USER'),
-       v.client_id::uuid, 'External'::employment_type, 'Active'::user_status, 'Asia/Kolkata'
+       v.client_id::uuid, 'External'::employment_type, 'Active'::user_status, 'Asia/Dubai'
 from (values
   ('00000000-0000-4000-8000-0000000000f1','10000000-0000-4000-8000-0000000000f1','Aurora Client User','client.aurora@client.test','20000000-0000-4000-8000-000000000001'),
   ('00000000-0000-4000-8000-0000000000f2','10000000-0000-4000-8000-0000000000f2','Dune Client User',  'client.dune@client.test',  '20000000-0000-4000-8000-000000000004')

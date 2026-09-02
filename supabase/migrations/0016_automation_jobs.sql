@@ -856,7 +856,7 @@ as $$
 declare v_tz text; v_today date;
 begin
   select timezone into v_tz from public.users where id = p_user_id;
-  v_tz := coalesce(v_tz, 'Asia/Kolkata');
+  v_tz := coalesce(v_tz, 'Asia/Dubai');
   v_today := (now() at time zone v_tz)::date;
 
   return jsonb_build_object(
