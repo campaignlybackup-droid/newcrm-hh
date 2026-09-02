@@ -128,7 +128,7 @@ begin
   -- A zero-day shift still normalises onto the next working day.
   if v_left = 0 then
     while not public.is_working_day(v_date, p_country) loop
-      v_date := v_date + 1;
+      v_date := v_date + v_step;
     end loop;
     return v_date;
   end if;
