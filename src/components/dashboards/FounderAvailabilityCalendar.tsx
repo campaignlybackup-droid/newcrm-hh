@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, supabaseDynamic } from '@/lib/supabase/client';
+import { supabaseDynamic } from '@/lib/supabase/client';
 import { useSession } from '@/lib/session';
-import { Card, Spinner, StatusChip, Button, Avatar } from '@/components/ui/primitives';
+import { Spinner, Avatar, Button } from '@/components/ui/primitives';
 import { pushToast } from '@/components/ui/Toaster';
 import { cn } from '@/lib/utils';
 
@@ -31,10 +31,8 @@ export function FounderAvailabilityCalendar() {
   const { data: session } = useSession();
   const isFounder = (session?.role?.level ?? 99) <= 1;
 
-  const [editStatus, setEditStatus] = useState<FounderAvailabilityData['status']>('Available');
-  const [editNote, setEditNote] = useState<string>('');
-  const [editLocation, setEditLocation] = useState<string>('Dubai HQ');
-  const [showEditDrawer, setShowEditDrawer] = useState<boolean>(false);
+  const [noteEdit, setNoteEdit] = useState<string>('');
+  const [isEditingNote, setIsEditingNote] = useState<boolean>(false);
 
   const availabilityQuery = useQuery({
     queryKey: ['founder_availability'],
@@ -51,31 +49,23 @@ export function FounderAvailabilityCalendar() {
 
   const data = availabilityQuery.data;
 
-  useEffect(() => {
-    if (data) {
-      setEditStatus(data.status);
-      setEditNote(data.status_note ?? '');
-      setEditLocation(data.location ?? 'Dubai HQ');
-    }
-  }, [data]);
-
-  const updateMutation = useMutation({
+  const updateStatusMutation = useMutation({
     mutationFn: async ({
       status,
       note,
       location,
     }: {
       status: FounderAvailabilityData['status'];
-      note: string;
-      location: string;
+      note?: string;
+      location?: string;
     }) => {
       if (!data?.id) {
         const { error } = await supabaseDynamic()
           .from('founder_availability')
           .insert({
             status,
-            status_note: note,
-            location,
+            status_note: note ?? 'In Office — Open for strategy & approvals',
+            location: location ?? 'Dubai HQ (GST UTC+4)',
             updated_by: session?.user.id,
           });
         if (error) throw error;
@@ -84,8 +74,8 @@ export function FounderAvailabilityCalendar() {
           .from('founder_availability')
           .update({
             status,
-            status_note: note,
-            location,
+            status_note: note ?? data.status_note,
+            location: location ?? data.location,
             updated_at: new Date().toISOString(),
             updated_by: session?.user.id,
           })
@@ -94,8 +84,8 @@ export function FounderAvailabilityCalendar() {
       }
     },
     onSuccess: () => {
-      pushToast('Founder availability & schedule updated live!');
-      setShowEditDrawer(false);
+      pushToast('Founder availability updated live!');
+      setIsEditingNote(false);
       queryClient.invalidateQueries({ queryKey: ['founder_availability'] });
     },
     onError: (err) => {
@@ -103,7 +93,7 @@ export function FounderAvailabilityCalendar() {
     },
   });
 
-  if (availabilityQuery.isLoading) return <Spinner label="Loading Founder availability..." />;
+  if (availabilityQuery.isLoading) return <Spinner label="Loading Founder status..." />;
 
   const status = data?.status ?? 'Available';
   const statusNote = data?.status_note ?? 'In Office — Open for strategy & approvals';
@@ -118,149 +108,143 @@ export function FounderAvailabilityCalendar() {
     { day: 'Sunday', working: false, start: null, end: null, open_hours: 'Weekend' },
   ];
 
-  const statusColors = {
-    Available: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    'In Meeting': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    Busy: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-    'Out of Office': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-    'On Leave': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  // Determine Today's Open Hours
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayName = daysOfWeek[new Date().getDay()];
+  const todaySlot = slots.find((s) => s.day === todayName) ?? slots[1];
+
+  const statusConfig = {
+    Available: { bg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400', icon: '🟢', label: 'AVAILABLE NOW' },
+    'In Meeting': { bg: 'bg-amber-500/10 border-amber-500/30 text-amber-400', icon: '🟡', label: 'IN CLIENT MEETING' },
+    Busy: { bg: 'bg-rose-500/10 border-rose-500/30 text-rose-400', icon: '🔴', label: 'BUSY / FOCUS MODE' },
+    'Out of Office': { bg: 'bg-sky-500/10 border-sky-500/30 text-sky-400', icon: '✈️', label: 'OUT OF OFFICE' },
+    'On Leave': { bg: 'bg-purple-500/10 border-purple-500/30 text-purple-400', icon: '🌴', label: 'ON LEAVE' },
   };
 
-  const statusIcons = {
-    Available: '🟢',
-    'In Meeting': '🟡',
-    Busy: '🔴',
-    'Out of Office': '✈️',
-    'On Leave': '🌴',
-  };
+  const currentConfig = statusConfig[status] ?? statusConfig.Available;
 
   return (
-    <div className="col-span-full rounded-lg border border-border bg-surface p-4 space-y-3">
-      {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+    <div className="col-span-full rounded-xl border border-border bg-surface p-4 shadow-sm space-y-3">
+      {/* Top Banner & Status Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Avatar name="Founder Ira" size={36} />
-            <span className="absolute -bottom-1 -right-1 text-xs">
-              {statusIcons[status]}
+            <Avatar name="Founder Ira" size={38} />
+            <span className="absolute -bottom-1 -right-1 text-sm">
+              {currentConfig.icon}
             </span>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <span>👑</span> Founder&apos;s Live Availability &amp; Open Office Hours
-            </h3>
-            <p className="text-xs text-muted truncate max-w-[450px]">
-              {statusNote} · <span className="font-mono text-foreground">{location}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className={cn('rounded-full border px-2.5 py-0.5 text-xs font-medium flex items-center gap-1.5', statusColors[status])}>
-            <span>{statusIcons[status]}</span>
-            <span>{status}</span>
-          </span>
-
-          {isFounder && (
-            <Button variant="outline" size="sm" onClick={() => setShowEditDrawer(true)}>
-              ✏️ Update Availability
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Weekly Schedule Grid */}
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-7">
-        {slots.map((s) => (
-          <div
-            key={s.day}
-            className={cn(
-              'rounded-md border p-2.5 text-xs transition-colors',
-              s.working ? 'border-border bg-raised' : 'border-border/40 bg-surface opacity-50'
-            )}
-          >
-            <div className="flex items-center justify-between font-medium text-foreground">
-              <span>{s.day}</span>
-              <span className="text-[10px] font-mono text-muted">
-                {s.working ? `${s.start} - ${s.end}` : 'Off'}
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground">
+                Founder&apos;s Live Availability
+              </h3>
+              <span className={cn('rounded-full border px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wide', currentConfig.bg)}>
+                {currentConfig.icon} {currentConfig.label}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-accent font-mono truncate" title={s.open_hours}>
-              {s.open_hours}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Founder Live Control Drawer */}
-      {showEditDrawer && isFounder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <Card title="Update Founder Real-time Availability" className="w-full max-w-md bg-surface border-border shadow-xl">
-            <div className="space-y-4 pt-2 text-xs">
-              <div>
-                <label className="block text-muted mb-1.5 font-medium">Select Real-Time Status:</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {(['Available', 'In Meeting', 'Busy', 'Out of Office', 'On Leave'] as const).map((st) => (
-                    <button
-                      key={st}
-                      onClick={() => setEditStatus(st)}
-                      className={cn(
-                        'rounded border px-2.5 py-1 text-xs font-medium transition-colors flex items-center gap-1',
-                        editStatus === st ? statusColors[st] : 'border-border bg-raised text-muted hover:text-foreground'
-                      )}
-                    >
-                      <span>{statusIcons[st]}</span>
-                      <span>{st}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-muted mb-1 font-medium">Status Note for Team:</label>
+            
+            {!isEditingNote ? (
+              <p className="text-xs text-muted mt-0.5 flex items-center gap-2">
+                <span>{statusNote}</span>
+                <span className="text-muted/60">·</span>
+                <span className="font-mono text-foreground/80">{location}</span>
+                {isFounder && (
+                  <button
+                    onClick={() => {
+                      setNoteEdit(statusNote);
+                      setIsEditingNote(true);
+                    }}
+                    className="text-[11px] text-accent hover:underline ml-1"
+                  >
+                    Edit Note
+                  </button>
+                )}
+              </p>
+            ) : (
+              <div className="mt-1 flex items-center gap-2">
                 <input
                   type="text"
-                  value={editNote}
-                  onChange={(e) => setEditNote(e.target.value)}
-                  placeholder="e.g. In Client Shoot at Dubai Marina until 4 PM"
-                  className="w-full rounded border border-border bg-raised p-2 text-xs text-foreground focus:border-accent focus:outline-none"
+                  value={noteEdit}
+                  onChange={(e) => setNoteEdit(e.target.value)}
+                  className="rounded border border-border bg-raised px-2 py-0.5 text-xs text-foreground focus:border-accent focus:outline-none w-72"
+                  placeholder="Enter status note..."
                 />
-              </div>
-
-              <div>
-                <label className="block text-muted mb-1 font-medium">Current Location:</label>
-                <input
-                  type="text"
-                  value={editLocation}
-                  onChange={(e) => setEditLocation(e.target.value)}
-                  placeholder="e.g. Dubai HQ (GST UTC+4)"
-                  className="w-full rounded border border-border bg-raised p-2 text-xs text-foreground focus:border-accent focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                <Button variant="ghost" size="sm" onClick={() => setShowEditDrawer(false)}>
-                  Cancel
-                </Button>
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={updateMutation.isPending}
-                  onClick={() =>
-                    updateMutation.mutate({
-                      status: editStatus,
-                      note: editNote,
-                      location: editLocation,
-                    })
-                  }
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => updateStatusMutation.mutate({ status, note: noteEdit })}
                 >
-                  {updateMutation.isPending ? 'Updating...' : 'Publish Status Live'}
+                  Save
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setIsEditingNote(false)}>
+                  Cancel
                 </Button>
               </div>
-            </div>
-          </Card>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* 1-Click Founder Status Switcher (Renders on Card for Founder) */}
+        {isFounder && (
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-raised p-1 text-xs">
+            <span className="px-1.5 text-[10px] font-mono text-muted uppercase">Set Status:</span>
+            {(['Available', 'In Meeting', 'Busy', 'Out of Office'] as const).map((st) => (
+              <button
+                key={st}
+                onClick={() => updateStatusMutation.mutate({ status: st })}
+                disabled={updateStatusMutation.isPending}
+                className={cn(
+                  'rounded px-2 py-1 font-medium transition-all text-xs flex items-center gap-1',
+                  status === st
+                    ? 'bg-surface text-foreground shadow-xs border border-border font-semibold'
+                    : 'text-muted hover:text-foreground'
+                )}
+              >
+                <span>{statusConfig[st].icon}</span>
+                <span>{st}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Today's Open Discussion Slot Callout */}
+      <div className="rounded-lg border border-accent/20 bg-accent/5 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-accent font-semibold">📅 Today ({todayName}):</span>
+          <span className="text-foreground">
+            {todaySlot.working ? (
+              <>Working <span className="font-mono text-accent">{todaySlot.start} – {todaySlot.end} GST</span></>
+            ) : (
+              <span className="text-muted">Off (Weekend)</span>
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted font-mono">
+          <span>Open Slot:</span>
+          <span className="rounded bg-raised px-2 py-0.5 text-accent font-semibold">
+            {todaySlot.open_hours}
+          </span>
+        </div>
+      </div>
+
+      {/* Clean 5-Day Weekly Strip */}
+      <div className="grid grid-cols-5 gap-1.5 text-[11px]">
+        {slots.filter(s => s.working).map((s) => (
+          <div
+            key={s.day}
+            className={cn(
+              'rounded-md border border-border/60 bg-raised/50 p-2 flex items-center justify-between',
+              s.day === todayName && 'border-accent/40 bg-accent/5'
+            )}
+          >
+            <span className="font-medium text-foreground">{s.day.slice(0, 3)}</span>
+            <span className="font-mono text-muted text-[10px]">{s.start} - {s.end}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
