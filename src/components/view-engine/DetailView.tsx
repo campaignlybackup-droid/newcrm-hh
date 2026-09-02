@@ -11,6 +11,7 @@ import { RelatedRecords } from './RelatedRecords';
 import { Comments } from './Comments';
 import { ClientContextBanner } from './ClientContextBanner';
 import { ClientProjectSuite } from './ClientProjectSuite';
+import { RecordAccessControlDrawer } from './RecordAccessControlDrawer';
 import { isEditable, sections, type FieldDef, type ModuleDef } from '@/modules/types';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +31,7 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
   const update = useUpdateRecord();
   const del = useSoftDelete();
   const [tab, setTab] = useState<Tab>('details');
+  const [showAccessDrawer, setShowAccessDrawer] = useState<boolean>(false);
 
   if (record.isLoading) return <Spinner label={`Loading ${mod.singular.toLowerCase()}`} />;
   if (record.error) return <div className="p-4"><ErrorBox error={record.error} /></div>;
@@ -58,6 +60,7 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
   };
 
   const client = row.client as { id?: string; brand_name?: string } | null;
+  const isFounder = (session?.role?.level ?? 99) <= 1;
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">
@@ -84,6 +87,15 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
         </div>
 
         <div className="flex items-center gap-1.5">
+          {isFounder && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAccessDrawer(true)}
+            >
+              🔒 Item Access &amp; Edit Controls
+            </Button>
+          )}
           {can(session, mod.key, 'delete') && mod.softDelete && !row.deleted_at && (
             <Button variant="danger"
               onClick={() => del.mutate({ mod, ids: [id] }, {
@@ -94,6 +106,15 @@ export function DetailView({ mod, id }: { mod: ModuleDef; id: string }) {
           )}
         </div>
       </header>
+
+      {showAccessDrawer && (
+        <RecordAccessControlDrawer
+          tableName={mod.table}
+          recordId={id}
+          recordTitle={String(row[mod.titleField] ?? mod.singular)}
+          onClose={() => setShowAccessDrawer(false)}
+        />
+      )}
 
       {Boolean(row.client_id || client?.id) && mod.key !== 'clients' && (
         <ClientContextBanner clientId={String(row.client_id ?? client?.id)} />
