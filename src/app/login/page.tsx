@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
 import { Button, Input, ErrorBox } from '@/components/ui/primitives';
 
 const TEAM_PRESETS = [
@@ -29,24 +28,32 @@ function LoginForm() {
   const [busy, setBusy] = useState(false);
 
   const performLogin = async (targetEmail: string, targetPass: string) => {
-    setBusy(true); setError(null);
+    setBusy(true);
+    setError(null);
     try {
-      const { error } = await supabase().auth.signInWithPassword({
-        email: targetEmail,
-        password: targetPass,
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, password: targetPass }),
       });
 
-      if (error) {
-        // Fallback for local development / seeded accounts when Supabase Auth URL is unconfigured
-        document.cookie = `crm_dev_user=${encodeURIComponent(targetEmail)}; path=/; max-age=86400`;
-      }
-    } catch {
-      document.cookie = `crm_dev_user=${encodeURIComponent(targetEmail)}; path=/; max-age=86400`;
-    }
+      const data = await res.json();
+      setBusy(false);
 
-    setBusy(false);
-    router.replace(params.get('next') ?? '/dashboard');
-    router.refresh();
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Invalid email or password');
+        return;
+      }
+
+      router.replace(params.get('next') ?? '/dashboard');
+      router.refresh();
+    } catch {
+      setBusy(false);
+      // Fallback dev session
+      document.cookie = `crm_dev_user=${encodeURIComponent(targetEmail)}; path=/; max-age=86400`;
+      router.replace(params.get('next') ?? '/dashboard');
+      router.refresh();
+    }
   };
 
   const submit = (e: React.FormEvent) => {

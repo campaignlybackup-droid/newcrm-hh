@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -7,11 +8,13 @@ import { supabase } from '@/lib/supabase/client';
 import { useSession, can } from '@/lib/session';
 import { MODULES, MODULE_ORDER } from '@/modules/registry';
 import { Avatar, Button } from '@/components/ui/primitives';
+import { ChangePasswordModal } from '@/components/settings/ChangePasswordModal';
 import { cn } from '@/lib/utils';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { data: session } = useSession();
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   // Views the user pinned appear directly in the sidebar.
   const pinned = useQuery({
@@ -91,10 +94,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <p className="truncate text-[11px] text-muted">{session?.user.timezone}</p>
             </div>
           </div>
-          <Button variant="ghost" className="mt-1.5 w-full justify-center"
-            onClick={async () => { await supabase().auth.signOut(); window.location.href = '/login'; }}>
-            Sign out
-          </Button>
+          <div className="mt-1.5 flex flex-col gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-center text-[11px]"
+              onClick={() => setPasswordModalOpen(true)}
+            >
+              🔒 Change Password
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-center text-[11px]"
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                await supabase().auth.signOut();
+                window.location.href = '/login';
+              }}
+            >
+              Sign out
+            </Button>
+          </div>
+          <ChangePasswordModal isOpen={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
         </div>
       </aside>
 
