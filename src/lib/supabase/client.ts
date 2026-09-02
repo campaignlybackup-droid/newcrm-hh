@@ -11,10 +11,11 @@ export function createClient() {
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const url = (rawUrl && rawUrl.startsWith('http')) ? rawUrl : 'https://placeholder.supabase.co';
-  const key = rawKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder.placeholder';
+  if (!rawUrl || !rawKey) {
+    throw new Error('Supabase URL and Anon Key must be defined in environment variables for Live mode.');
+  }
 
-  return createBrowserClient<Database>(url, key);
+  return createBrowserClient<Database>(rawUrl, rawKey);
 }
 
 let singleton: ReturnType<typeof createClient> | null = null;

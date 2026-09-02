@@ -88,53 +88,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Email and password are required' }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // 0. Offline fallback for placeholder URL
-    if (supabaseUrl.includes('placeholder')) {
-      if (password !== 'Password123!') {
-        return NextResponse.json({ success: false, error: 'Use Password123! in demo mode' }, { status: 401 });
-      }
-
-      const roleMap: Record<string, { code: string; level: number; dept: string }> = {
-        'nimit@hekayahaus.com': { code: 'FOUNDER', level: 0, dept: 'EXECUTIVE' },
-        'manav@hekayahaus.com': { code: 'PRODUCTION_HEAD', level: 2, dept: 'PRODUCTION' },
-        'zainab@hekayahaus.com': { code: 'SOCIAL_HEAD', level: 2, dept: 'SOCIAL' },
-        'ansh@hekayahaus.com': { code: 'SOCIAL_EXECUTIVE', level: 5, dept: 'SOCIAL' },
-        'areej@hekayahaus.com': { code: 'SALES_EXECUTIVE', level: 5, dept: 'SALES' },
-        'jannat@hekayahaus.com': { code: 'SALES_EXECUTIVE', level: 5, dept: 'SALES' },
-        'aradhey@hekayahaus.com': { code: 'SALES_EXECUTIVE', level: 5, dept: 'SALES' },
-        'seegan@hekayahaus.com': { code: 'SALES_EXECUTIVE', level: 5, dept: 'SALES' },
-        'neeraj@hekayahaus.com': { code: 'SALES_EXECUTIVE', level: 5, dept: 'SALES' },
-        'parth@hekayahaus.com': { code: 'VIDEO_EDITOR', level: 5, dept: 'PRODUCTION' },
-        'dieablo@hekayahaus.com': { code: 'VIDEO_EDITOR', level: 5, dept: 'PRODUCTION' },
-        'hani@hekayahaus.com': { code: 'DOP', level: 5, dept: 'PRODUCTION' },
-      };
-
-      const match = roleMap[email.toLowerCase()];
-      if (!match) {
-        return NextResponse.json({ success: false, error: 'User not found in demo mode' }, { status: 401 });
-      }
-
-      const user = {
-        id: `00000000-0000-4000-8000-000000000${Object.keys(roleMap).indexOf(email.toLowerCase()) + 101}`,
-        auth_id: `10000000-0000-4000-8000-000000000${Object.keys(roleMap).indexOf(email.toLowerCase()) + 101}`,
-        full_name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
-        email: email,
-        phone: '',
-        role_code: match.code,
-        role_name: match.code.replace('_', ' '),
-        role_level: match.level,
-        is_manager: match.level <= 3,
-        is_external: false,
-        dept_code: match.dept,
-        dept_name: match.dept,
-        avatar_url: null,
-        timezone: 'Asia/Dubai',
-      };
-
-      return buildSessionResponse(user, null);
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ success: false, error: 'Live environment variables missing' }, { status: 500 });
     }
 
     const client = createClient(supabaseUrl, supabaseKey);
