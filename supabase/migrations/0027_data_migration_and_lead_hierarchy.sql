@@ -169,50 +169,14 @@ do $$
 declare
   v_enc_pass text := extensions.crypt('Password123!', extensions.gen_salt('bf'));
 begin
-  create schema if not exists auth;
-
-  create table if not exists auth.users (
-    id uuid primary key,
-    aud varchar(255),
-    role varchar(255),
-    email varchar(255) unique,
-    encrypted_password varchar(255),
-    email_confirmed_at timestamptz,
-    invited_at timestamptz,
-    confirmation_token varchar(255),
-    confirmation_sent_at timestamptz,
-    recovery_token varchar(255),
-    recovery_sent_at timestamptz,
-    email_change_token_new varchar(255),
-    email_change varchar(255),
-    email_change_sent_at timestamptz,
-    last_sign_in_at timestamptz,
-    raw_app_meta_data jsonb default '{"provider":"email","providers":["email"]}',
-    raw_user_meta_data jsonb default '{}',
-    is_super_admin boolean,
-    created_at timestamptz default now(),
-    updated_at timestamptz default now(),
-    phone varchar(255) default null,
-    phone_confirmed_at timestamptz default null,
-    phone_change varchar(255) default '',
-    phone_change_token varchar(255) default '',
-    phone_change_sent_at timestamptz default null,
-    confirmed_at timestamptz default now(),
-    email_change_token_current varchar(255) default '',
-    email_change_confirm_status smallint default 0,
-    banned_until timestamptz default null,
-    reauthentication_token varchar(255) default '',
-    reauthentication_sent_at timestamptz default null,
-    is_sso_user boolean default false,
-    deleted_at timestamptz default null
-  );
-
-  insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, confirmed_at)
-  select u.auth_id, 'authenticated', 'authenticated', u.email, v_enc_pass, now(), now()
-  from public.users u
-  where u.auth_id is not null
-  on conflict (id) do update set
-    email = excluded.email,
-    encrypted_password = excluded.encrypted_password,
-    email_confirmed_at = excluded.email_confirmed_at;
+  if exists (select 1 from information_schema.tables where table_schema = 'auth' and table_name = 'users') then
+    insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
+    select u.auth_id, 'authenticated', 'authenticated', u.email, v_enc_pass, now()
+    from public.users u
+    where u.auth_id is not null
+    on conflict (id) do update set
+      email = excluded.email,
+      encrypted_password = excluded.encrypted_password,
+      email_confirmed_at = excluded.email_confirmed_at;
+  end if;
 end $$;
