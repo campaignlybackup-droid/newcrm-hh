@@ -510,8 +510,7 @@ export const MODULES: Record<string, ModuleDef> = {
 
 export const MODULE_ORDER: ModuleKey[] = [
   'clients', 'leads', 'deliverables', 'tasks', 'shoots',
-  'content_calendar', 'campaigns', 'approvals', 'meetings', 'assets',
-  'equipment', 'people', 'leaves', 'reports',
+  'content_calendar', 'assets', 'people', 'leaves', 'reports',
 ];
 
 export function getModule(key: string): ModuleDef | undefined {

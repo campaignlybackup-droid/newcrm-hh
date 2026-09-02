@@ -9,11 +9,11 @@ import { createClient } from '@supabase/supabase-js';
 function defaultPermsForLevel(level: number, roleCode: string): Record<string, Record<string, boolean>> {
   const ALL_MODULES = [
     'clients', 'leads', 'projects', 'deliverables', 'tasks', 'shoots',
-    'content_calendar', 'campaigns', 'approvals', 'meetings', 'assets',
-    'equipment', 'people', 'leaves', 'reports',
+    'content_calendar', 'assets',
+    'people', 'leaves', 'reports',
   ];
-  const EXEC_MODULES = ['tasks', 'deliverables', 'assets', 'content_calendar', 'shoots', 'approvals', 'templates'];
-  const LEAD_MODULES = ['tasks', 'deliverables', 'assets', 'content_calendar', 'shoots', 'approvals', 'campaigns', 'templates', 'equipment'];
+  const EXEC_MODULES = ['tasks', 'deliverables', 'assets', 'content_calendar', 'shoots', 'templates'];
+  const LEAD_MODULES = ['tasks', 'deliverables', 'assets', 'content_calendar', 'shoots', 'templates'];
 
   const perms: Record<string, Record<string, boolean>> = {};
 

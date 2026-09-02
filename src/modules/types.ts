@@ -12,8 +12,7 @@ export type ViewName = keyof Database['public']['Views'];
 
 export type ModuleKey =
   | 'clients' | 'leads' | 'projects' | 'deliverables' | 'tasks' | 'shoots'
-  | 'content_calendar' | 'campaigns' | 'assets' | 'approvals' | 'meetings'
-  | 'reports' | 'people' | 'leaves' | 'equipment' | 'templates' | 'settings' | 'audit_log';
+  | 'content_calendar' | 'assets' | 'reports' | 'people' | 'leaves' | 'templates' | 'settings' | 'audit_log';
 
 export type ViewMode = 'list' | 'kanban' | 'calendar' | 'timeline';
 
