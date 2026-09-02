@@ -1,7 +1,7 @@
 'use client';
 
 import { use, Suspense } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ModuleView } from '@/components/view-engine/ModuleView';
 import { getModule } from '@/modules/registry';
 import { Spinner } from '@/components/ui/primitives';
@@ -12,6 +12,9 @@ import { Spinner } from '@/components/ui/primitives';
  */
 export default function ModulePage({ params }: { params: Promise<{ module: string }> }) {
   const { module } = use(params);
+  if (module === 'projects') {
+    redirect('/clients');
+  }
   const mod = getModule(module);
   if (!mod) notFound();
   return (

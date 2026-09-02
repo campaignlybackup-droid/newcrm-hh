@@ -15,7 +15,7 @@ const PROJECT_REL={ table: 'projects', labelKey: 'name',       orderBy: 'name' }
 export const MODULES: Record<string, ModuleDef> = {
   /* ---------------------------------------------------------------- */
   clients: {
-    key: 'clients', table: 'clients', label: 'Clients', singular: 'Client',
+    key: 'clients', table: 'clients', label: 'Clients & Projects', singular: 'Client & Project',
     titleField: 'brand_name',
     views: ['list', 'kanban', 'timeline'], defaultView: 'list',
     kanbanGroupBy: 'status', kanbanGroupOptions: ['status', 'health', 'priority', 'account_manager_id'],
@@ -509,7 +509,7 @@ export const MODULES: Record<string, ModuleDef> = {
 };
 
 export const MODULE_ORDER: ModuleKey[] = [
-  'clients', 'leads', 'projects', 'deliverables', 'tasks', 'shoots',
+  'clients', 'leads', 'deliverables', 'tasks', 'shoots',
   'content_calendar', 'campaigns', 'approvals', 'meetings', 'assets',
   'equipment', 'people', 'leaves', 'reports',
 ];
