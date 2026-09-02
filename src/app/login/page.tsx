@@ -49,10 +49,7 @@ function LoginForm() {
       router.refresh();
     } catch {
       setBusy(false);
-      // Fallback dev session
-      document.cookie = `crm_dev_user=${encodeURIComponent(targetEmail)}; path=/; max-age=86400`;
-      router.replace(params.get('next') ?? '/dashboard');
-      router.refresh();
+      setError('Unable to connect to the authentication server. Please try again.');
     }
   };
 

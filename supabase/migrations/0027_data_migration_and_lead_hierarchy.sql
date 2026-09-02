@@ -132,26 +132,27 @@ on conflict (id) do update set
   department_id = excluded.department_id,
   manager_id = excluded.manager_id;
 
--- 4. Seed Clients from Hostinger Database Export (assigned to Manav)
+-- 4. Seed Clients from Hostinger Database Export (assigning correct AMs: Manav & Nimit)
 insert into public.clients (id, legal_name, brand_name, industry, city, timezone, status,
                             source, priority, onboarding_date, account_manager_id, created_by)
 select v.id::uuid, v.legal_name, v.brand_name, v.industry, 'Dubai', 'Asia/Dubai', v.status::client_status,
-       'Referral', 'Medium'::priority_level, date '2026-08-10', '00000000-0000-4000-8000-000000000102'::uuid,
+       'Referral', 'Medium'::priority_level, date '2026-08-10', v.am_id::uuid,
        '00000000-0000-4000-8000-000000000101'::uuid
 from (values
-  ('20000000-0000-4000-8000-000000000101','Luxxfam LLC',    'Luxxfam',   'Wellness','Active'),
-  ('20000000-0000-4000-8000-000000000102','Bu faisal LLC', 'Bu faisal', 'F&B',     'Active'),
-  ('20000000-0000-4000-8000-000000000103','Al towba LLC',  'Al towba',  'Perfumes','Active'),
-  ('20000000-0000-4000-8000-000000000104','Mrg Trading',    'Mrg',       'Retail',  'Active'),
-  ('20000000-0000-4000-8000-000000000105','Happy town Co',  'Happy town','Entertainment','Active'),
-  ('20000000-0000-4000-8000-000000000107','Drifthome LLC',  'Drifthome', 'Interiors','Paused'),
-  ('20000000-0000-4000-8000-000000000108','Yogeeta Studio', 'Yogeeta',   'Fashion', 'Active'),
-  ('20000000-0000-4000-8000-000000000109','Qavalli Lounge', 'Qavalli',   'Hospitality','Active')
-) as v(id, legal_name, brand_name, industry, status)
+  ('20000000-0000-4000-8000-000000000101','Luxxfam LLC',    'Luxxfam',   'Wellness',      'Active', '00000000-0000-4000-8000-000000000102'),
+  ('20000000-0000-4000-8000-000000000102','Bu faisal LLC', 'Bu faisal', 'F&B',           'Active', '00000000-0000-4000-8000-000000000102'),
+  ('20000000-0000-4000-8000-000000000103','Al towba LLC',  'Al towba',  'Perfumes',      'Active', '00000000-0000-4000-8000-000000000101'),
+  ('20000000-0000-4000-8000-000000000104','Mrg Trading',    'Mrg',       'Retail',        'Active', '00000000-0000-4000-8000-000000000102'),
+  ('20000000-0000-4000-8000-000000000105','Happy town Co',  'Happy town','Entertainment', 'Active', '00000000-0000-4000-8000-000000000102'),
+  ('20000000-0000-4000-8000-000000000107','Drifthome LLC',  'Drifthome', 'Interiors',     'Paused', '00000000-0000-4000-8000-000000000101'),
+  ('20000000-0000-4000-8000-000000000108','Yogeeta Studio', 'Yogeeta',   'Fashion',       'Active', '00000000-0000-4000-8000-000000000101'),
+  ('20000000-0000-4000-8000-000000000109','Qavalli Lounge', 'Qavalli',   'Hospitality',   'Active', '00000000-0000-4000-8000-000000000102')
+) as v(id, legal_name, brand_name, industry, status, am_id)
 on conflict (id) do update set
   brand_name = excluded.brand_name,
   legal_name = excluded.legal_name,
-  status = excluded.status;
+  status = excluded.status,
+  account_manager_id = excluded.account_manager_id;
 
 -- 5. Give Production & Operations Head (Manav's role PRODUCTION_HEAD) full leads access & assignment rights
 update public.role_permissions
